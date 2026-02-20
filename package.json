@@ -1,0 +1,50 @@
+{
+  "name": "flight-dispatcher",
+  "version": "1.0.0",
+  "description": "Zero-install CLI that auto-generates .github/copilot-instructions.md for any project",
+  "keywords": [
+    "copilot",
+    "github-copilot",
+    "cli",
+    "ai",
+    "instructions",
+    "code-generation",
+    "developer-tools"
+  ],
+  "homepage": "https://github.com/flight-dispatcher/flight-dispatcher#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flight-dispatcher/flight-dispatcher.git"
+  },
+  "license": "MIT",
+  "author": "",
+  "type": "commonjs",
+  "main": "dist/cli.js",
+  "bin": {
+    "flight-dispatcher": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "dev": "ts-node src/cli.ts",
+    "start": "node dist/cli.js",
+    "prepublishOnly": "npm run build",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "enquirer": "^2.4.1",
+    "ora": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
