@@ -232,19 +232,30 @@ jobs:
           SHA_WIN=$(sha256sum "binaries/flight-dispatcher-${VERSION}-win-x64.exe" | awk '{print $1}')
           echo "win_x64=$SHA_WIN" >> $GITHUB_OUTPUT
 
-      - name: Checkout Scoop bucket
-        uses: actions/checkout@v4
-        with:
-          repository: caglarorhan/scoop-flight-dispatcher
-          token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
-          path: bucket
-
-      - name: Update manifest
+      - name: Update Scoop manifest and push
+        env:
+          SCOOP_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
         run: |
           VERSION="${{ github.ref_name }}"
           VERSION_NUM="${VERSION#v}"
           REPO="${{ github.repository }}"
-          cat > bucket/flight-dispatcher.json << EOF
+          WIN_SHA="${{ steps.sha.outputs.win_x64 }}"
+
+          # Clone or init the bucket repo
+          git clone "https://x-access-token:${SCOOP_TOKEN}@github.com/caglarorhan/scoop-flight-dispatcher.git" bucket || {
+            mkdir -p bucket
+            cd bucket
+            git init
+            git remote add origin "https://x-access-token:${SCOOP_TOKEN}@github.com/caglarorhan/scoop-flight-dispatcher.git"
+            cd ..
+          }
+
+          cd bucket
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Write the manifest (no indentation — Scoop requires clean JSON)
+          cat > flight-dispatcher.json << EOF
           {
             "version": "${VERSION_NUM}",
             "description": "Zero-install CLI that auto-generates .github/copilot-instructions.md",
@@ -253,7 +264,7 @@ jobs:
             "architecture": {
               "64bit": {
                 "url": "https://github.com/${REPO}/releases/download/${VERSION}/flight-dispatcher-${VERSION}-win-x64.exe",
-                "hash": "${{ steps.sha.outputs.win_x64 }}",
+                "hash": "${WIN_SHA}",
                 "bin": [["flight-dispatcher-${VERSION}-win-x64.exe", "flight-dispatcher"]]
               }
             },
@@ -271,11 +282,7 @@ jobs:
           }
           EOF
 
-      - name: Commit and push manifest update
-        run: |
-          cd bucket
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add flight-dispatcher.json
-          git commit -m "chore: update flight-dispatcher to ${{ github.ref_name }}"
-          git push
+          git commit -m "chore: update flight-dispatcher to ${VERSION}"
+          # Push; -u sets upstream for first push on new repo
+          git push -u origin HEAD:main
