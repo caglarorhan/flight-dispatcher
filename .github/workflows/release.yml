@@ -1,0 +1,225 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-binaries:
+    name: Build binaries (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            targets: node18-linux-x64,node18-linux-arm64,node18-macos-x64,node18-macos-arm64,node18-win-x64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Build binaries
+        run: npx pkg . --compress GZip --out-path binaries
+
+      - name: Rename binaries
+        shell: bash
+        run: |
+          cd binaries
+          # pkg names them flight-dispatcher-linux, flight-dispatcher-macos, flight-dispatcher-win.exe, etc.
+          # Rename to include version for clarity
+          VERSION="${{ github.ref_name }}"
+          for f in *; do
+            if [[ "$f" == *-win* ]]; then
+              mv "$f" "flight-dispatcher-${VERSION}-win-x64.exe" 2>/dev/null || true
+            elif [[ "$f" == *-macos-arm64* ]] || [[ "$f" == *-macos*arm* ]]; then
+              mv "$f" "flight-dispatcher-${VERSION}-macos-arm64" 2>/dev/null || true
+            elif [[ "$f" == *-macos* ]]; then
+              mv "$f" "flight-dispatcher-${VERSION}-macos-x64" 2>/dev/null || true
+            elif [[ "$f" == *-linux-arm64* ]] || [[ "$f" == *-linux*arm* ]]; then
+              mv "$f" "flight-dispatcher-${VERSION}-linux-arm64" 2>/dev/null || true
+            elif [[ "$f" == *-linux* ]]; then
+              mv "$f" "flight-dispatcher-${VERSION}-linux-x64" 2>/dev/null || true
+            fi
+          done
+          chmod +x flight-dispatcher-*/
+          ls -la
+
+      - name: Compute checksums
+        shell: bash
+        run: |
+          cd binaries
+          sha256sum * > checksums.txt
+          cat checksums.txt
+
+      - name: Upload binaries as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: binaries/
+
+  create-release:
+    name: Create GitHub Release
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries
+          path: binaries/
+
+      - name: Read changelog / tag message
+        id: tag_info
+        run: |
+          echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "flight-dispatcher ${{ steps.tag_info.outputs.tag }}"
+          body: |
+            ## Installation
+
+            ### npx (any platform, Node.js required)
+            ```bash
+            npx flight-dispatcher
+            ```
+
+            ### Standalone binary (no Node.js required)
+            **macOS (Apple Silicon)**
+            ```bash
+            curl -fsSL https://github.com/${{ github.repository }}/releases/download/${{ steps.tag_info.outputs.tag }}/flight-dispatcher-${{ steps.tag_info.outputs.tag }}-macos-arm64 -o flight-dispatcher
+            chmod +x flight-dispatcher && sudo mv flight-dispatcher /usr/local/bin/
+            ```
+
+            **macOS (Intel)**
+            ```bash
+            curl -fsSL https://github.com/${{ github.repository }}/releases/download/${{ steps.tag_info.outputs.tag }}/flight-dispatcher-${{ steps.tag_info.outputs.tag }}-macos-x64 -o flight-dispatcher
+            chmod +x flight-dispatcher && sudo mv flight-dispatcher /usr/local/bin/
+            ```
+
+            **Linux (x64)**
+            ```bash
+            curl -fsSL https://github.com/${{ github.repository }}/releases/download/${{ steps.tag_info.outputs.tag }}/flight-dispatcher-${{ steps.tag_info.outputs.tag }}-linux-x64 -o flight-dispatcher
+            chmod +x flight-dispatcher && sudo mv flight-dispatcher /usr/local/bin/
+            ```
+
+            **Windows** — download `flight-dispatcher-${{ steps.tag_info.outputs.tag }}-win-x64.exe` below and add to your PATH.
+
+            ### Homebrew (macOS/Linux)
+            ```bash
+            brew tap caglarorhan/flight-dispatcher
+            brew install flight-dispatcher
+            ```
+
+            ### npm (global install)
+            ```bash
+            npm install -g flight-dispatcher
+            ```
+
+            ---
+
+            See `checksums.txt` for SHA256 verification.
+          files: |
+            binaries/*
+          draft: false
+          prerelease: false
+
+  update-homebrew:
+    name: Update Homebrew Formula
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries
+          path: binaries/
+
+      - name: Compute SHA256 for macOS arm64
+        id: sha
+        run: |
+          VERSION="${{ github.ref_name }}"
+          SHA_ARM=$(sha256sum "binaries/flight-dispatcher-${VERSION}-macos-arm64" | awk '{print $1}')
+          SHA_X64=$(sha256sum "binaries/flight-dispatcher-${VERSION}-macos-x64" | awk '{print $1}')
+          echo "macos_arm64=$SHA_ARM" >> $GITHUB_OUTPUT
+          echo "macos_x64=$SHA_X64" >> $GITHUB_OUTPUT
+
+      - name: Checkout Homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: caglarorhan/homebrew-flight-dispatcher
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+
+      - name: Update formula
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION_NUM="${VERSION#v}"
+          REPO="${{ github.repository }}"
+          cat > tap/Formula/flight-dispatcher.rb << EOF
+          class FlightDispatcher < Formula
+            desc "Zero-install CLI that auto-generates .github/copilot-instructions.md"
+            homepage "https://github.com/${REPO}"
+            version "${VERSION_NUM}"
+            license "MIT"
+
+            on_macos do
+              if Hardware::CPU.arm?
+                url "https://github.com/${REPO}/releases/download/${VERSION}/flight-dispatcher-${VERSION}-macos-arm64"
+                sha256 "${{ steps.sha.outputs.macos_arm64 }}"
+
+                def install
+                  bin.install "flight-dispatcher-#{version}-macos-arm64" => "flight-dispatcher"
+                end
+              else
+                url "https://github.com/${REPO}/releases/download/${VERSION}/flight-dispatcher-${VERSION}-macos-x64"
+                sha256 "${{ steps.sha.outputs.macos_x64 }}"
+
+                def install
+                  bin.install "flight-dispatcher-#{version}-macos-x64" => "flight-dispatcher"
+                end
+              end
+            end
+
+            on_linux do
+              url "https://github.com/${REPO}/releases/download/${VERSION}/flight-dispatcher-${VERSION}-linux-x64"
+              sha256 "LINUX_SHA256_PLACEHOLDER"
+
+              def install
+                bin.install "flight-dispatcher-#{version}-linux-x64" => "flight-dispatcher"
+              end
+            end
+
+            test do
+              system "#{bin}/flight-dispatcher", "--help"
+            end
+          end
+          EOF
+
+      - name: Commit and push formula update
+        run: |
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/flight-dispatcher.rb
+          git commit -m "chore: update flight-dispatcher to ${{ github.ref_name }}"
+          git push

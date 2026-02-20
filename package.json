@@ -1,0 +1,63 @@
+{
+  "name": "flight-dispatcher",
+  "version": "1.1.0",
+  "description": "Zero-install CLI that auto-generates .github/copilot-instructions.md for any project",
+  "keywords": [
+    "copilot",
+    "github-copilot",
+    "cli",
+    "ai",
+    "instructions",
+    "code-generation",
+    "developer-tools"
+  ],
+  "homepage": "https://github.com/caglarorhan/flight-dispatcher#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caglarorhan/flight-dispatcher.git"
+  },
+  "license": "MIT",
+  "author": "",
+  "type": "commonjs",
+  "main": "dist/cli.js",
+  "bin": {
+    "flight-dispatcher": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "build:bin": "npm run build && pkg . --compress GZip --out-path binaries",
+    "dev": "ts-node src/cli.ts",
+    "start": "node dist/cli.js",
+    "prepublishOnly": "npm run build",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "enquirer": "^2.4.1",
+    "ora": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@yao-pkg/pkg": "^5.16.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "pkg": {
+    "scripts": "dist/**/*.js",
+    "targets": [
+      "node18-win-x64",
+      "node18-macos-x64",
+      "node18-macos-arm64",
+      "node18-linux-x64",
+      "node18-linux-arm64"
+    ],
+    "outputPath": "binaries"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
