@@ -34,30 +34,18 @@ jobs:
         run: npm run build
 
       - name: Build binaries
-        run: ./node_modules/.bin/pkg . --compress GZip --out-path binaries
-
-      - name: Rename binaries
         shell: bash
         run: |
-          cd binaries
-          # pkg names them flight-dispatcher-linux, flight-dispatcher-macos, flight-dispatcher-win.exe, etc.
-          # Rename to include version for clarity
           VERSION="${{ github.ref_name }}"
-          for f in *; do
-            if [[ "$f" == *-win* ]]; then
-              mv "$f" "flight-dispatcher-${VERSION}-win-x64.exe" 2>/dev/null || true
-            elif [[ "$f" == *-macos-arm64* ]] || [[ "$f" == *-macos*arm* ]]; then
-              mv "$f" "flight-dispatcher-${VERSION}-macos-arm64" 2>/dev/null || true
-            elif [[ "$f" == *-macos* ]]; then
-              mv "$f" "flight-dispatcher-${VERSION}-macos-x64" 2>/dev/null || true
-            elif [[ "$f" == *-linux-arm64* ]] || [[ "$f" == *-linux*arm* ]]; then
-              mv "$f" "flight-dispatcher-${VERSION}-linux-arm64" 2>/dev/null || true
-            elif [[ "$f" == *-linux* ]]; then
-              mv "$f" "flight-dispatcher-${VERSION}-linux-x64" 2>/dev/null || true
-            fi
-          done
-          chmod +x flight-dispatcher-* 2>/dev/null || true
-          ls -la
+          mkdir -p binaries
+          PKG=./node_modules/.bin/pkg
+          $PKG . --compress GZip --target node18-win-x64    --output "binaries/flight-dispatcher-${VERSION}-win-x64.exe"
+          $PKG . --compress GZip --target node18-macos-x64  --output "binaries/flight-dispatcher-${VERSION}-macos-x64"
+          $PKG . --compress GZip --target node18-macos-arm64 --output "binaries/flight-dispatcher-${VERSION}-macos-arm64"
+          $PKG . --compress GZip --target node18-linux-x64  --output "binaries/flight-dispatcher-${VERSION}-linux-x64"
+          $PKG . --compress GZip --target node18-linux-arm64 --output "binaries/flight-dispatcher-${VERSION}-linux-arm64"
+          chmod +x binaries/flight-dispatcher-*
+          ls -la binaries/
 
       - name: Compute checksums
         shell: bash
