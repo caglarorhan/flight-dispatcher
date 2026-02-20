@@ -213,3 +213,69 @@ jobs:
           git add Formula/flight-dispatcher.rb
           git commit -m "chore: update flight-dispatcher to ${{ github.ref_name }}"
           git push
+
+  update-scoop:
+    name: Update Scoop Manifest
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries
+          path: binaries/
+
+      - name: Compute SHA256 for Windows binary
+        id: sha
+        run: |
+          VERSION="${{ github.ref_name }}"
+          SHA_WIN=$(sha256sum "binaries/flight-dispatcher-${VERSION}-win-x64.exe" | awk '{print $1}')
+          echo "win_x64=$SHA_WIN" >> $GITHUB_OUTPUT
+
+      - name: Checkout Scoop bucket
+        uses: actions/checkout@v4
+        with:
+          repository: caglarorhan/scoop-flight-dispatcher
+          token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          path: bucket
+
+      - name: Update manifest
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION_NUM="${VERSION#v}"
+          REPO="${{ github.repository }}"
+          cat > bucket/flight-dispatcher.json << EOF
+          {
+            "version": "${VERSION_NUM}",
+            "description": "Zero-install CLI that auto-generates .github/copilot-instructions.md",
+            "homepage": "https://github.com/${REPO}",
+            "license": "MIT",
+            "architecture": {
+              "64bit": {
+                "url": "https://github.com/${REPO}/releases/download/${VERSION}/flight-dispatcher-${VERSION}-win-x64.exe",
+                "hash": "${{ steps.sha.outputs.win_x64 }}",
+                "bin": [["flight-dispatcher-${VERSION}-win-x64.exe", "flight-dispatcher"]]
+              }
+            },
+            "checkver": {
+              "github": "https://github.com/${REPO}"
+            },
+            "autoupdate": {
+              "architecture": {
+                "64bit": {
+                  "url": "https://github.com/${REPO}/releases/download/v\$version/flight-dispatcher-v\$version-win-x64.exe",
+                  "bin": [["flight-dispatcher-v\$version-win-x64.exe", "flight-dispatcher"]]
+                }
+              }
+            }
+          }
+          EOF
+
+      - name: Commit and push manifest update
+        run: |
+          cd bucket
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add flight-dispatcher.json
+          git commit -m "chore: update flight-dispatcher to ${{ github.ref_name }}"
+          git push

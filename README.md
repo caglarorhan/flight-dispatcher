@@ -212,6 +212,12 @@ brew tap caglarorhan/flight-dispatcher
 brew install flight-dispatcher
 ```
 
+### Scoop (Windows)
+```powershell
+scoop bucket add flight-dispatcher https://github.com/caglarorhan/scoop-flight-dispatcher
+scoop install flight-dispatcher
+```
+
 ### Standalone binary — no Node.js required
 Download the binary for your platform from [GitHub Releases](https://github.com/caglarorhan/flight-dispatcher/releases/latest):
 

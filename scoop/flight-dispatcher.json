@@ -1,0 +1,24 @@
+{
+  "version": "1.1.0",
+  "description": "Zero-install CLI that auto-generates .github/copilot-instructions.md",
+  "homepage": "https://github.com/caglarorhan/flight-dispatcher",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/caglarorhan/flight-dispatcher/releases/download/v1.1.0/flight-dispatcher-v1.1.0-win-x64.exe",
+      "hash": "PLACEHOLDER_WIN_SHA256",
+      "bin": [["flight-dispatcher-v1.1.0-win-x64.exe", "flight-dispatcher"]]
+    }
+  },
+  "checkver": {
+    "github": "https://github.com/caglarorhan/flight-dispatcher"
+  },
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/caglarorhan/flight-dispatcher/releases/download/v$version/flight-dispatcher-v$version-win-x64.exe",
+        "bin": [["flight-dispatcher-v$version-win-x64.exe", "flight-dispatcher"]]
+      }
+    }
+  }
+}
