@@ -11,10 +11,10 @@
     "code-generation",
     "developer-tools"
   ],
-  "homepage": "https://github.com/flight-dispatcher/flight-dispatcher#readme",
+  "homepage": "https://github.com/caglarorhan/flight-dispatcher#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/flight-dispatcher/flight-dispatcher.git"
+    "url": "git+https://github.com/caglarorhan/flight-dispatcher.git"
   },
   "license": "MIT",
   "author": "",

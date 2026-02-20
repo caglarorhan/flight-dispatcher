@@ -158,6 +158,13 @@ flight-dispatcher
 
 ---
 
+## Links
+
+- **npm:** https://www.npmjs.com/package/flight-dispatcher
+- **GitHub:** https://github.com/caglarorhan/flight-dispatcher
+
+---
+
 ## License
 
 MIT
