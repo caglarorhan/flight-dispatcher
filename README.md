@@ -2,6 +2,22 @@
 
 **Zero-install CLI that auto-generates `.github/copilot-instructions.md` for any project.**
 
+[![npm version](https://img.shields.io/npm/v/flight-dispatcher?color=cb3837&logo=npm&logoColor=white&label=npm)](https://www.npmjs.com/package/flight-dispatcher)
+[![npm downloads](https://img.shields.io/npm/dw/flight-dispatcher?color=cb3837&logo=npm&logoColor=white&label=downloads%2Fweek)](https://www.npmjs.com/package/flight-dispatcher)
+[![npm total downloads](https://img.shields.io/npm/dt/flight-dispatcher?label=total%20downloads&color=cb3837)](https://www.npmjs.com/package/flight-dispatcher)
+[![GitHub release](https://img.shields.io/github/v/release/caglarorhan/flight-dispatcher?logo=github&label=latest%20release)](https://github.com/caglarorhan/flight-dispatcher/releases/latest)
+[![GitHub stars](https://img.shields.io/github/stars/caglarorhan/flight-dispatcher?style=flat&logo=github&label=stars)](https://github.com/caglarorhan/flight-dispatcher/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/caglarorhan/flight-dispatcher?style=flat&logo=github&label=forks)](https://github.com/caglarorhan/flight-dispatcher/forks)
+[![Release workflow](https://img.shields.io/github/actions/workflow/status/caglarorhan/flight-dispatcher/release.yml?label=release%20build&logo=github-actions&logoColor=white)](https://github.com/caglarorhan/flight-dispatcher/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org)
+
+[![macOS](https://img.shields.io/badge/macOS-arm64%20%7C%20x64-black?logo=apple&logoColor=white)](https://github.com/caglarorhan/flight-dispatcher/releases/latest)
+[![Linux](https://img.shields.io/badge/Linux-arm64%20%7C%20x64-yellow?logo=linux&logoColor=black)](https://github.com/caglarorhan/flight-dispatcher/releases/latest)
+[![Windows](https://img.shields.io/badge/Windows-x64-blue?logo=windows&logoColor=white)](https://github.com/caglarorhan/flight-dispatcher/releases/latest)
+[![Homebrew](https://img.shields.io/badge/Homebrew-tap-orange?logo=homebrew&logoColor=white)](https://github.com/caglarorhan/homebrew-flight-dispatcher)
+[![Scoop](https://img.shields.io/badge/Scoop-bucket-dodgerblue?logo=scoop&logoColor=white)](https://github.com/caglarorhan/scoop-flight-dispatcher)
+
 ```bash
 npx flight-dispatcher
 ```
@@ -250,6 +266,9 @@ flight-dispatcher
 
 - **npm:** https://www.npmjs.com/package/flight-dispatcher
 - **GitHub:** https://github.com/caglarorhan/flight-dispatcher
+- **Releases:** https://github.com/caglarorhan/flight-dispatcher/releases
+- **Homebrew tap:** https://github.com/caglarorhan/homebrew-flight-dispatcher
+- **Scoop bucket:** https://github.com/caglarorhan/scoop-flight-dispatcher
 
 ---
 
